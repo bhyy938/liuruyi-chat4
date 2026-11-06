@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="liuruyi_primary">#7C5CFC</color>
-    <color name="liuruyi_secondary">#FF7AB8</color>
+    <color name="ic_launcher_background">#FF7AB8</color>
 </resources>

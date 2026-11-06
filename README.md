@@ -1,68 +1,41 @@
-# 邱岳靓 — Android 聊天 App
+# 刘茹依 — Android 聊天 App
 
-一个基于 DeepSeek API 的单人文字聊天 App。人设是"嘴贫但走心"的内蒙高中女生 **邱岳靓**，采用 SSE 流式输出，带全局长期记忆、会话摘要、主动消息和上下文超限告警。
+一个基于 DeepSeek API 的单人文字聊天 App，人设是"嘴贫但走心、喜欢你但嘴硬"的内蒙高三女生 **刘茹依**（App 名 liuruyi）。
 
-> 交付物为 **Android Studio 工程源码**（本机无 JDK / Android SDK / Gradle，无法替你打包 APK）。用 Android Studio 打开即可编译运行。
+> 交付物为 **Android Studio 工程源码**。本机无 JDK/Android SDK，无法本地打包 APK，用下面的 A/B/C 任一方式打包即可。
 
 ## 技术栈
-- Kotlin **2.0.21** + Jetpack Compose（BOM 2024.09.03，Material3）
-- OkHttp 4.12.0（手写 SSE 解析）、kotlinx-serialization-json 1.7.3
-- kotlinx-coroutines-android 1.9.0、navigation-compose 2.8.1、lifecycle-viewmodel-compose 2.8.6
+- Kotlin 2.0.21 + Jetpack Compose（BOM 2024.09.03，Material3）
+- OkHttp 4.12.0、kotlinx-serialization-json 1.7.3、kotlinx-coroutines-android 1.9.0
+- navigation-compose 2.8.1、lifecycle-viewmodel-compose 2.8.6
 - Gradle 8.7 + AGP 8.6.1，compileSdk/targetSdk 35，minSdk 26
 
-## 运行步骤
-1. 安装 **Android Studio**（自带 JDK 17），以及 SDK Platform 35。
-2. 打开本目录 LiuruyiChat（File → Open）。
-3. 首次同步会自动下载 Gradle 并补全 gradle/wrapper/gradle-wrapper.jar。
-   - 若用命令行：先执行 gradle wrapper --gradle-version 8.7 生成 wrapper jar，再 gradlew.bat assembleDebug（Windows）。
-   - Android Studio 会自动生成 local.properties（内含 sdk.dir），无需手写。
-4. 连接设备或启动模拟器，点 Run。
+## 运行 / 打包（三选一）
+- **A. 云端打包（推荐）**：把整个文件夹推到 GitHub 仓库（已内置 .github/workflows/build-apk.yml），Actions 自动编译，产物在 Artifacts 里下载 app-debug.apk。
+- **B. 本地一键打包**：装了 JDK 17 + Android SDK 的 Windows 电脑上双击 build_apk.bat，APK 在 app/build/outputs/apk/debug/。
+- **C. Android Studio**：打开项目 → Build → Build APK(s)。
 
 ## 配置 API Key
-1. 首次进入后到 **设置** 页，粘贴你的 DeepSeek API Key（sk-...）。
-2. Key 用 **Android Keystore（AES/GCM）加密**后只存在本机 SharedPreferences，不写进聊天文件、不进日志。
-3. 模型名默认 deepseek-flash，在 Config.kt 里改为你账号实际可用的模型名即可。
+1. 首次进入后到「设置」页，粘贴 DeepSeek API Key（sk-...）。
+2. Key 用 Android Keystore（AES/GCM）加密存本机，不进聊天文件、不进日志。
+3. 模型名默认 deepseek-flash，在 Config.kt 里可改。
 
-## 已实现功能
-- SSE 流式输出（打字机效果），支持"停止"按钮，停止后保留半截并标记"已停止"。
-- **上下文预算**：软阈值 4500 token（触发摘要）、硬阈值 7000 token（弹窗告警）。
-  - 告警弹窗：继续 = 带全部旧原文（全原文模式，上限 60000 token）；取消 = 不发送、保留输入。
-  - 摘要只发生于"未摘要消息 ≥ 600 token"时，摘要目标 ≤ 800 token；已摘要消息由 coveredUntilMessageId 覆盖。
-- **全局长期记忆**：跨会话，新会话自动加载并计入上下文预算。
-- **主动消息**：每天最多 5 条、每次打开最多 1 条，支持 SKIP；命中锚点词（考试/放假/约定等）或 30% 概率触发，跨天重置计数。
-- 会话列表 + 多会话切换 + 原子本地存储（files/liuruyi/，损坏自动备份为 .bak 重建）。
+## 已实现功能（当前版）
+- **后台整段生成、逐条气泡弹出**：不显示逐字打字过程；一次回复拆成 2~4 条短消息逐条弹出，短句约 0.5~1.5 秒，像微信实时收到消息。
+- **彻底消灭 null**：接口返回空/失败时静默或给自然短句，绝不渲染 null/undefined；历史 null 消息展示前过滤。
+- **单会话、微信式界面**：只有一个联系人「刘茹依」，无「+」新建入口，不显示 token/模型名等 AI 痕迹，强制浅色主题。
+- **人格**：基于 156 页真实聊天记录提炼，写在 Prompts.kt；含聊天风格、关系态度（满眼都是你、认识两年、暧昧分寸）、真实对白 few-shot 样本。
+- **关系/好感度演化**：亲密度随对话增长（初识→熟悉→熟络→亲密→心照不宣），阶段决定语气亲疏，动态注入。
+- **全局长期记忆 + 会话摘要**：软阈值 45000 token（触发摘要）、硬阈值 70000（旧消息摘要压缩续聊，不弹"开新窗口"）。
+- **主动消息**：每天最多 5 条、每次打开最多 1 条，支持 SKIP。
+- **其它**：消息引用回溯、撤回会话+撤销、会话内搜索、单条复制/删除、手动头像、称呼演化、单向图片发送、设备 TTS、网络天气/日期。
 
 ## 提示词
-三段提示词（附录 A 系统人设 / B 摘要 / C 主动消息）全部原样写在 Prompts.kt，未做任何改写。
-
-## 项目结构
-（缩进表示层级）
-
-    app/src/main/java/com/example/liuruyi/
-      MainActivity.kt / Config.kt / Prompts.kt
-      ui/              ChatScreen, SessionListScreen, SettingsScreen, MainViewModel, theme/
-      ui/components/   MessageBubble, InputBar, TokenBar, HardLimitDialog
-      data/            Models, LocalStore, SessionRepository, MemoryRepository, KeystoreHelper, JsonUtil
-      network/         DeepSeekClient, SseParser
-      domain/          ContextBuilder, Summarizer, ProactiveManager, ChatOrchestrator
-      util/            TokenEstimator, TimeProvider, Logger, Ids
-    app/src/test/      ContextBuilderTest, StorageTest, TokenEstimatorTest
+三段提示词（附录 A 系统人设 / B 摘要 / C 主动消息）写在 Prompts.kt。附录 A 已按《人格设定-prompt.md》重写，并补回"满眼都是你 / 认识两年 / 暧昧分寸"的态度设定。
 
 ## 测试
 
-    gradlew.bat testDebugUnitTest      (Windows)
-    ./gradlew testDebugUnitTest        (Linux/macOS)
+    gradlew.bat testDebugUnitTest   (Windows)
 
 ## 说明
-- 该 App 为**单用户、文字聊天**，无登录、无本地模型、无图片等媒体。
-- 需要网络访问 https://api.deepseek.com
-
-## 如何拿到能装的 APK（本环境无法直接替你打包）
-
-这台机器没有 JDK / Android SDK，且网络受限，无法下载编译工具链，所以**这里不能直接产出 APK**。任选其一：
-
-- **A. 本地一键打包**：在装了 JDK 17 + Android SDK 的 Windows 电脑上，双击根目录的 build_apk.bat，生成的 APK 在 app/build/outputs/apk/debug/app-debug.apk。
-- **B. 云端打包（推荐，电脑什么都不用装）**：把整个文件夹推到 GitHub 仓库（已内置 .github/workflows/build-apk.yml），仓库的 Actions 会自动编译，产物在 Artifacts 里下载。
-- **C. Android Studio**：打开项目后菜单 Build → Build Bundle(s)/APK(s) → Build APK(s)。
-
-拿到 APK 后：传到手机 → 点开 → 允许"安装未知来源应用" → 安装完成。
+- 单用户文字聊天，无登录；需要网络访问 https://api.deepseek.com 和 Open-Meteo（天气）。
